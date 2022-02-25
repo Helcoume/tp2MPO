@@ -5,7 +5,7 @@
   extern double epot, vir;
 
   void
-  forces(int npart, double x[], double f[], double side, double rcoff){
+  forces(int npart, double x[], double f[], double side, double rcoff, double **tmp_f){
 
     int   i, j;
     vir    = 0.0;
@@ -57,11 +57,9 @@
           fyi     += yy*r148;
           fzi     += zz*r148;
 
-            #pragma omp atomic
-            f[j]    -= xx*r148;
-            #pragma omp atomic
+
+            f[j]   -= xx*r148;
             f[j+1]  -= yy*r148;
-            #pragma omp atomic
             f[j+2]  -= zz*r148;
           
 
@@ -69,13 +67,12 @@
 
       }
 
-      // update forces on particle i 
-        #pragma omp atomic
+      // update forces on particle  
         f[i]     += fxi;
-        #pragma omp atomic
         f[i+1]   += fyi;
-        #pragma omp atomic
         f[i+2]   += fzi;
       
-    }
+    } 
+
+
   }

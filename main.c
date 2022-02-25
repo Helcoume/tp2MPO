@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <time.h>
 #include <omp.h> 
@@ -67,13 +69,17 @@
  *  Main program : Molecular Dynamics simulation.
  */
 int main(){
-    int move;
+    int move, num_of_threads=atoi(getenv("OMP_NUM_THREADS"));
     double x[npart*3], vh[npart*3], f[npart*3];
+    double *tmp_f[num_of_threads];
+    for(int z = 0; z<num_of_threads; z++)
+    {
+            tmp_f[z] = calloc(1, sizeof(f));
+    }
     double ekin;
     double vel;
     double sc;
     double start, time;
-
 
   /*
    *  Parameter definitions
@@ -129,7 +135,7 @@ int main(){
 
      start = secnds(); 
 
-#pragma omp parallel private(move) firstprivate(movemx) 
+#pragma omp parallel private(move)
   {
     for (move=1; move<=movemx; move++) {
 
@@ -142,8 +148,20 @@ int main(){
      *  Compute forces in the new positions and accumulate the virial
      *  and potential energy.
      */
-      forces(npart, x, f, side, rcoff);
+       const int thread_num = omp_get_thread_num();
+       forces(npart, x, tmp_f[thread_num], side, rcoff);
 
+       #pragma omp for schedule(static)
+       for(int i=0; i<npart*3; i++)
+       {
+               f[i] = 0.0;
+               for(int j=0; j<num_of_threads; j++)
+               {
+           	    f[i] += tmp_f[j][i];
+           	    tmp_f[j][i] = 0.0;
+               } 
+       }	   
+  
     /*
      *  Scale forces, complete update of velocities and compute k.e.
      */
