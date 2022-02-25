@@ -11,6 +11,7 @@
     vir    = 0.0;
     epot   = 0.0;
 
+  #pragma omp parallel for private(i,j) shared(npart,rcoff,side,f,x) reduction(+:epot) reduction(-:vir) schedule(runtime)
     for (i=0; i<npart*3; i+=3) {
 
 
@@ -49,7 +50,6 @@
           double rrd4     = rrd3*rrd;
           double r148     = rrd4*(rrd3 - 0.5);
 
-
           epot    += rrd3*(rrd3-1.0); 
           vir     -= rd*r148;
 
@@ -57,17 +57,25 @@
           fyi     += yy*r148;
           fzi     += zz*r148;
 
-          f[j]    -= xx*r148;
-          f[j+1]  -= yy*r148;
-          f[j+2]  -= zz*r148;
+            #pragma omp atomic
+            f[j]    -= xx*r148;
+            #pragma omp atomic
+            f[j+1]  -= yy*r148;
+            #pragma omp atomic
+            f[j+2]  -= zz*r148;
+          
 
         }
 
       }
 
       // update forces on particle i 
-	f[i]     += fxi;
-	f[i+1]   += fyi;
-	f[i+2]   += fzi;
+        #pragma omp atomic
+        f[i]     += fxi;
+        #pragma omp atomic
+        f[i+1]   += fyi;
+        #pragma omp atomic
+        f[i+2]   += fzi;
+      
     }
   }
