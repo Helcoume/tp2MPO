@@ -127,13 +127,17 @@ int main(){
 
      start = secnds(); 
 
-
+#pragma omp parallel private(move) firstprivate(movemx) 
+  {
     for (move=1; move<=movemx; move++) {
 
     /*
      *  Move the particles and partially update velocities
      */
+    #pragma omp single
+    {
       domove(3*npart, x, vh, f, side);
+    }
 
     /*
      *  Compute forces in the new positions and accumulate the virial
@@ -144,6 +148,8 @@ int main(){
     /*
      *  Scale forces, complete update of velocities and compute k.e.
      */
+    #pragma omp single
+    {
       ekin=mkekin(npart, f, vh, hsq2, hsq);
 
     /*
@@ -155,6 +161,7 @@ int main(){
         dscal(3*npart, sc, vh, 1);
         ekin=tref/tscale;
       }
+ 
 
     /*
      *  Sum to get full potential energy and virial
@@ -163,6 +170,8 @@ int main(){
         prnout(move, ekin, epot, tscale, vir, vel, count, npart, den);
       
     }
+    }
+ }
 
     time = secnds() - start;  
 

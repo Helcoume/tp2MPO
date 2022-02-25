@@ -11,7 +11,7 @@
     vir    = 0.0;
     epot   = 0.0;
 
-  #pragma omp parallel for private(i,j) shared(npart,rcoff,side,f,x) reduction(+:epot) reduction(-:vir) schedule(runtime)
+  #pragma omp for private(i,j) reduction(+:epot) reduction(-:vir) schedule(runtime)
     for (i=0; i<npart*3; i+=3) {
 
 
