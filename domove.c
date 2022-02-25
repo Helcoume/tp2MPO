@@ -5,7 +5,7 @@
   void
   domove(int n3, double x[], double vh[], double f[], double side){
     int i;
-
+#pragma omp for private(i) schedule(runtime)
     for (i=0; i<n3; i++) {
       x[i] += vh[i]+f[i];
   /*

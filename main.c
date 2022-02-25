@@ -60,6 +60,8 @@
   double epot;
   double vir;
   double count;
+  double sum;
+  double tmp_vel;
 
 /*
  *  Main program : Molecular Dynamics simulation.
@@ -134,10 +136,7 @@ int main(){
     /*
      *  Move the particles and partially update velocities
      */
-    #pragma omp single
-    {
       domove(3*npart, x, vh, f, side);
-    }
 
     /*
      *  Compute forces in the new positions and accumulate the virial
@@ -148,8 +147,6 @@ int main(){
     /*
      *  Scale forces, complete update of velocities and compute k.e.
      */
-    #pragma omp single
-    {
       ekin=mkekin(npart, f, vh, hsq2, hsq);
 
     /*
@@ -166,6 +163,8 @@ int main(){
     /*
      *  Sum to get full potential energy and virial
      */
+    #pragma omp single
+    {
       if (fmod(move, iprint)==0)
         prnout(move, ekin, epot, tscale, vir, vel, count, npart, den);
       
